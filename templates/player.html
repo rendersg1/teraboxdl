@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ filename }} - Terabox Video Player</title>
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #121212;
+            color: #f8f9fa;
+        }
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 100%;
+            height: 0;
+            padding-bottom: 56.25%;
+            margin: 0 auto;
+            overflow: hidden;
+            background-color: #000;
+            border-radius: 8px;
+        }
+        .video-container video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .controls-container {
+            margin-top: 16px;
+            margin-bottom: 24px;
+        }
+        .loading-spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+        /* Custom video controls */
+        .video-js .vjs-control-bar {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        .btn-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 8px;
+        }
+        .video-info {
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        .download-container {
+            padding: 15px;
+            border-radius: 8px;
+            background-color: rgba(255, 255, 255, 0.05);
+            margin-bottom: 20px;
+        }
+        .video-download-link {
+            display: block;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">Terabox Video Player</h1>
+            <a href="/" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-house-door"></i> Home
+            </a>
+        </div>
+
+        <div class="video-info mb-4">
+            <h2 class="h4 mb-2">{{ filename }}</h2>
+            <p class="mb-1"><strong>Size:</strong> {{ filesize }}</p>
+            <p class="mb-0 text-muted"><small>Note: This video is streamed directly from Terabox</small></p>
+        </div>
+
+        <div class="video-container mb-3">
+            <div class="loading-spinner" id="loading">
+                <div class="spinner-border text-light" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <video id="videoPlayer" controls autoplay preload="auto" poster="/static/img/loading-poster.jpg">
+                <source src="{{ video_url }}" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+
+        <div class="controls-container d-flex justify-content-center mb-4">
+            <button class="btn btn-light btn-icon" id="playPauseBtn" title="Play/Pause">
+                <i class="bi bi-play-fill" id="playIcon"></i>
+            </button>
+            <button class="btn btn-light btn-icon" id="muteBtn" title="Mute/Unmute">
+                <i class="bi bi-volume-up-fill" id="volumeIcon"></i>
+            </button>
+            <button class="btn btn-light btn-icon" id="fullscreenBtn" title="Enter Fullscreen">
+                <i class="bi bi-fullscreen"></i>
+            </button>
+        </div>
+
+        <div class="download-container">
+            <h3 class="h5">Download Options</h3>
+            <p>If the video doesn't play properly, you can download it directly:</p>
+            <a href="{{ video_url }}" class="btn btn-primary" download="{{ filename }}">
+                <i class="bi bi-download me-2"></i> Download Video ({{ filesize }})
+            </a>
+            <div class="mt-3">
+                <p class="mb-1"><small class="text-warning"><i class="bi bi-exclamation-triangle"></i> The direct download link expires in a few hours.</small></p>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-body">
+                <h3 class="h5 mb-3">Having Issues?</h3>
+                <p>Try these solutions:</p>
+                <ul>
+                    <li>Some mobile browsers might have issues with the player. Try using a desktop browser.</li>
+                    <li>If the video doesn't play, use the download button to save it to your device.</li>
+                    <li>If you're still having issues, go back to Telegram and try the other streaming options.</li>
+                </ul>
+                <p class="mb-0">Return to <a href="https://t.me/Testsgpaparobot" class="link-info">Telegram Bot</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Video player functionality
+        const video = document.getElementById('videoPlayer');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const playIcon = document.getElementById('playIcon');
+        const muteBtn = document.getElementById('muteBtn');
+        const volumeIcon = document.getElementById('volumeIcon');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const loading = document.getElementById('loading');
+
+        // Handle loading spinner
+        video.addEventListener('loadeddata', function() {
+            loading.style.display = 'none';
+        });
+
+        video.addEventListener('waiting', function() {
+            loading.style.display = 'block';
+        });
+
+        video.addEventListener('playing', function() {
+            loading.style.display = 'none';
+            updatePlayButton();
+        });
+
+        // Play/Pause functionality
+        function togglePlay() {
+            if (video.paused || video.ended) {
+                video.play();
+            } else {
+                video.pause();
+            }
+        }
+
+        function updatePlayButton() {
+            if (video.paused || video.ended) {
+                playIcon.className = 'bi bi-play-fill';
+            } else {
+                playIcon.className = 'bi bi-pause-fill';
+            }
+        }
+
+        playPauseBtn.addEventListener('click', togglePlay);
+        video.addEventListener('click', togglePlay);
+        video.addEventListener('play', updatePlayButton);
+        video.addEventListener('pause', updatePlayButton);
+
+        // Mute functionality
+        function toggleMute() {
+            video.muted = !video.muted;
+            updateMuteButton();
+        }
+
+        function updateMuteButton() {
+            if (video.muted) {
+                volumeIcon.className = 'bi bi-volume-mute-fill';
+            } else {
+                volumeIcon.className = 'bi bi-volume-up-fill';
+            }
+        }
+
+        muteBtn.addEventListener('click', toggleMute);
+
+        // Fullscreen functionality
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                if (video.requestFullscreen) {
+                    video.requestFullscreen();
+                } else if (video.webkitRequestFullscreen) {
+                    video.webkitRequestFullscreen();
+                } else if (video.msRequestFullscreen) {
+                    video.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+        }
+
+        fullscreenBtn.addEventListener('click', toggleFullscreen);
+
+        // Handle video errors
+        video.addEventListener('error', function() {
+            console.error('Video error occurred');
+            loading.style.display = 'none';
+            alert('There was an error playing this video. Please try the download option instead.');
+        });
+    </script>
+</body>
+</html>
